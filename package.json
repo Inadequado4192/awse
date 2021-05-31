@@ -1,13 +1,13 @@
 {
     "name": "awse",
-    "version": "1.0.0",
+    "version": "1.0.1",
     "description": "Getting anime wallpapers from websites.",
     "main": "core/index.js",
     "scripts": {
         "compile": "tsc -p ./tsconfig.json",
         "open": "node test/index.js",
         "start": "npm run compile && npm run open",
-        "pushGit": "git add . && git commit -m \"awse\" && git push origin master --force"
+        "save": "git add . && git commit -m \"awse\" && git push origin master --force"
     },
     "author": "Vladyslav Kulbachnyi <lozaliya1@gmail.com>",
     "keywords": [
