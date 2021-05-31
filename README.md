@@ -25,9 +25,8 @@ const { getAnySite } = require("awse");
 ```js
 pikabu.get({
     search: "Neko",
-    pages: 1,
-    minImages: 10
-}).then(d => console.log(d.URL, d.URLs.size, d.pages));
+    pages: 1
+}).then(d => console.log(d.URL, d.URLs, d.pages, d.timeout));
 console.log(pikabu.url) // Link to website (https://pikabu.ru/)
 ```
 ```js
@@ -35,7 +34,7 @@ getAnySite({
     search: "Black Clover",
     pages: 2,
     minImages: 100
-}).then(d => console.log(d.URL, d.URLs.size, d.pages));
+}).then(d => console.log(d.URL, d.URL, d.pages, d.timeout));
 ```
 
 # Parameters of the `get(options)` function
@@ -50,9 +49,9 @@ getAnySite({
 The result of execution will be `Promise <Data>`.
 `Data` - Contains data received from the site:
 * ### Properties:
-  * **URL** `:string` - Link to website.
-  * **URLs** `:Set<string>` - List of image URLs.
+  * **url** `:string` - Link to website.
+  * **images** `:Set<string>` - List of image URLs.
   * **timeout** `:number` - Function execution time.
   * **pages** `:number` - Number of pages viewed.
 * ### Methods:
-  * **randomRange([range])**  `:string[]` -  Selects random URLs from the list.
+  * **randomRange([range])**  `:string[]` -  Selects random images from the list.
