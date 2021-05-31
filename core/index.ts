@@ -259,7 +259,7 @@ const zedge = new LiveWeb({
  *     pages: 1
  * }).then(console.log);
  */
-function getAnySite(param: ParamGet): Promise<Data> {
+function getAnySite(param: OptionsGet): Promise<Data> {
     let list = ["alphacoders", "wallpaperflare", "pikabu", "goodfon", "zedge"];
     return (eval(list[Math.floor(Math.random() * list.length)]) as Web).get(param);
 }
