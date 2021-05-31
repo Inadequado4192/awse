@@ -7,7 +7,7 @@
         "compile": "tsc -p ./tsconfig.json",
         "open": "node test/index.js",
         "start": "npm run compile && npm run open",
-        "save": "git add . && git commit -m \"awse\" && git push origin master --force"
+        "save": "git add . && git commit -m \"awse\" && git push origin master --force && npm publish"
     },
     "author": "Vladyslav Kulbachnyi <lozaliya1@gmail.com>",
     "keywords": [

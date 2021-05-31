@@ -9,7 +9,9 @@ const { getAnySite, alphacoders, wallpaperflare, pikabu, goodfon, zedge } = requ
 });
 
 getAnySite({
-    search: "Neko"
+    
 }).then(d => console.log(d.URL, d.URLs.size, d.pages));
 
-alphacoders.url
+alphacoders.get({
+
+})

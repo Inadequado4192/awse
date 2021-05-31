@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getAnySite = exports.zedge = exports.goodfon = exports.pikabu = exports.wallpaperflare = exports.alphacoders = void 0;
+exports.zedge = exports.goodfon = exports.pikabu = exports.wallpaperflare = exports.alphacoders = exports.getAnySite = void 0;
 const then_request_1 = require("then-request");
 const cheerio = require("cheerio");
 function getBody(url) {

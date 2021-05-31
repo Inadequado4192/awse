@@ -39,6 +39,11 @@ type OptionsWeb = {
     url: string,
     _searchURL: (tag: string, page: number) => string
 }
+type OptionsGet = {
+    search: string,
+    pages?: number,
+    minImages?: number
+}
 type ParamGet = {
     end: (page: number) => void,
     URLs: Set<string>,
@@ -75,7 +80,7 @@ abstract class Web {
             minImages: 40
         }).then(console.log);
     */
-    public get(options: { search: string, pages?: number, minImages?: number }): Promise<Data> {
+    public get(options: OptionsGet): Promise<Data> {
         if (!options) throw TypeError(`The "options" parameter is not specified.`);
         if ((!options.search && options.search !== "") || typeof options.search !== "string") throw TypeError(`Missing "search" argument in parameters`);
         if (!options.pages || options.pages < 0) options.pages = 1;
