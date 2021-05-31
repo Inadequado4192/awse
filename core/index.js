@@ -11,16 +11,16 @@ function getBody(url) {
     });
 }
 class Data {
-    constructor(URL, URLs, timeout, pages) {
-        this.URL = URL;
-        this.URLs = URLs;
+    constructor(url, images, timeout, pages) {
+        this.url = url;
+        this.images = images;
         this.timeout = timeout;
         this.pages = pages;
     }
     ;
     randomRange(range = 1) {
         let a = [];
-        let copy = Array.from(this.URLs);
+        let copy = Array.from(this.images);
         for (let i = 0; i < range && copy.length > 0; i++) {
             let u = copy[Math.floor(Math.random() * copy.length)];
             if (!a.includes(u))
@@ -47,13 +47,13 @@ class Web {
         if (!options.minImages || options.minImages < 0)
             options.minImages = 0;
         let sTime = new Date().getTime();
-        let URLs = new Set();
-        let URL = this.url;
+        let images = new Set();
+        let url = this.url;
         return new Promise(async (resolve) => {
-            function end(page) { resolve(new Data(URL, URLs, new Date().getTime() - sTime, page - 1)); }
+            function end(page) { resolve(new Data(url, images, new Date().getTime() - sTime, page - 1)); }
             this._get({
                 end: end,
-                URLs: URLs,
+                images: images,
                 minImages: options.minImages,
                 pages: options.pages,
                 sTime: sTime,
@@ -71,7 +71,7 @@ class StaticWeb extends Web {
     async _get(param) {
         let _IU;
         (async function loadPage(page) {
-            if (page > param.pages && param.URLs.size >= param.minImages)
+            if (page > param.pages && param.images.size >= param.minImages)
                 return param.end(page);
             let $ = cheerio.load(await getBody(this._searchURL(param.search.replace(/\s+/g, "%20"), page)));
             let images = Array.from($(this._imagePath));
@@ -81,7 +81,7 @@ class StaticWeb extends Web {
             if (($("head title")[0] && $("head title")[0].children[0].data.includes("ERROR 404")))
                 return param.end(page);
             for (let i of imagesA)
-                param.URLs.add(i.attribs.src || i.attribs["data-src"]);
+                param.images.add(i.attribs.src || i.attribs["data-src"]);
             if (imagesA[0]) {
                 let fSRC = imagesA[0].attribs.src || imagesA[0].attribs["data-src"];
                 if (fSRC == _IU)
@@ -103,7 +103,7 @@ class LiveWeb extends Web {
             for (let i of jItems) {
                 if (!i.tags.includes("anime"))
                     continue;
-                param.URLs.add(i.thumbUrl);
+                param.images.add(i.thumbUrl);
             }
             if ((page < param.pages) && jItems.length > 0)
                 return await loadPage.apply(this, [++page]);

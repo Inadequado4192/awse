@@ -12,19 +12,19 @@ function getBody(url: string) {
 
 /**Contains data received from the site.*/
 class Data {
-    /**Link to website.*/         public URL: string;
-    /**List of image URLs.*/      public URLs: Set<string>;
+    /**Link to website.*/         public url: string;
+    /**List of image URLs.*/      public images: Set<string>;
     /**Function execution time.*/ public timeout: number;
     /**Number of pages viewed.*/  public pages: number;
-    constructor(URL: string, URLs: Set<string>, timeout: number, pages: number) {
-        this.URL = URL; this.URLs = URLs; this.timeout = timeout; this.pages = pages;
+    constructor(url: string, images: Set<string>, timeout: number, pages: number) {
+        this.url = url; this.images = images; this.timeout = timeout; this.pages = pages;
     };
-    /**Selects random URLs from the list.
+    /**Selects random images from the list.
      * @returns URL
      */
     public randomRange(range: number = 1): string[] {
         let a: string[] = [];
-        let copy = Array.from(this.URLs);
+        let copy = Array.from(this.images);
         for (let i = 0; i < range && copy.length > 0; i++) {
             let u = copy[Math.floor(Math.random() * copy.length)];
             if (!a.includes(u)) a.push(u);
@@ -46,7 +46,7 @@ type OptionsGet = {
 }
 type ParamGet = {
     end: (page: number) => void,
-    URLs: Set<string>,
+    images: Set<string>,
     sTime: number,
     search: string,
     pages: number,
@@ -87,13 +87,13 @@ abstract class Web {
         if (!options.minImages || options.minImages < 0) options.minImages = 0;
 
         let sTime = new Date().getTime();
-        let URLs = new Set<string>();
-        let URL = this.url;
+        let images = new Set<string>();
+        let url = this.url;
         return new Promise(async (resolve: (value: Data) => void) => {
-            function end(page: number) { resolve(new Data(URL, URLs, new Date().getTime() - sTime, page - 1)); }
+            function end(page: number) { resolve(new Data(url, images, new Date().getTime() - sTime, page - 1)); }
             this._get({
                 end: end,
-                URLs: URLs,
+                images: images,
                 minImages: options.minImages,
                 pages: options.pages,
                 sTime: sTime,
@@ -117,7 +117,7 @@ class StaticWeb extends Web {
     protected async _get(param: ParamGet) {
         let _IU: string;
         (async function loadPage(this: StaticWeb, page: number): Promise<void> {
-            if (page > param.pages && param.URLs.size >= param.minImages) return param.end(page);
+            if (page > param.pages && param.images.size >= param.minImages) return param.end(page);
             let $ = cheerio.load(await getBody(this._searchURL(param.search.replace(/\s+/g, "%20"), page)));
             // write($);
             // console.log(this._searchURL(options.search.replace(/\s+/g, "%20"), page));
@@ -128,7 +128,7 @@ class StaticWeb extends Web {
 
             if (($("head title")[0] && ($("head title")[0].children[0] as any).data.includes("ERROR 404"))) return param.end(page);
 
-            for (let i of imagesA) param.URLs.add((<cheerio.Element>i).attribs.src || (<cheerio.Element>i).attribs["data-src"]);
+            for (let i of imagesA) param.images.add((<cheerio.Element>i).attribs.src || (<cheerio.Element>i).attribs["data-src"]);
             if (imagesA[0]) {
                 let fSRC = (<cheerio.Element>imagesA[0]).attribs.src || (<cheerio.Element>imagesA[0]).attribs["data-src"];
                 if (fSRC == _IU) return param.end(page);
@@ -149,7 +149,7 @@ class LiveWeb extends Web {
             let jItems = JSON.parse($("body").html() as string).items;
             for (let i of jItems) {
                 if (!i.tags.includes("anime")) continue;
-                param.URLs.add(i.thumbUrl);
+                param.images.add(i.thumbUrl);
             }
             if ((page < param.pages) && jItems.length > 0) return await loadPage.apply(this, [++page]);
             else param.end(page + 1);
@@ -181,11 +181,6 @@ const alphacoders = new StaticWeb({
 const wallpaperflare = new StaticWeb({
     url: "https://www.wallpaperflare.com/",
     _imagePath: "#gallery > li > figure > a > img",
-    // _isNotPage($: cheerio.CheerioAPI) {
-    //     return false;
-    //     if (!$("div.prevnext")[0]) return false;
-    //     else return $("div.prevnext a")[1].attribs.class.includes("nolink");
-    // },
     _searchURL(tag: string, page: number): string {
         return `${this.url}search?wallpaper=Anime%20${tag}${page == 1 ? "" : `&page=${page}`}`;
     },

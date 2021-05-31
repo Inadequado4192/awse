@@ -1,6 +1,6 @@
 {
     "name": "awse",
-    "version": "1.0.5",
+    "version": "1.1.0",
     "description": "Getting anime wallpapers from websites.",
     "main": "core/index.js",
     "scripts": {
@@ -24,7 +24,6 @@
     "license": "ISC",
     "dependencies": {
         "cheerio": "^1.0.0-rc.9",
-        "fs-extra": "^10.0.0",
         "then-request": "^6.0.2",
         "typescript": "^4.2.4"
     },
