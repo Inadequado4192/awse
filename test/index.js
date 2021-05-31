@@ -7,11 +7,3 @@ const { getAnySite, alphacoders, wallpaperflare, pikabu, goodfon, zedge } = requ
         minImages: 100
     }).then(d => console.log(fn, d.URLs.size, d.pages))
 });
-
-getAnySite({
-    
-}).then(d => console.log(d.URL, d.URLs.size, d.pages));
-
-alphacoders.get({
-
-})

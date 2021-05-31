@@ -4,7 +4,7 @@ Getting anime wallpapers from websites.
 > List of available websites: `alphacoders`, `wallpaperflare`, `pikabu`, `goodfon`, `zedge`
 
 
-[![npm Package](https://img.shields.io/badge/npm-v1.1.2-blue?style=for-the-badge&logo=appveyor)](https://www.npmjs.org/package/awse) [![License](https://img.shields.io/badge/license-ISC-green?style=for-the-badge&logo=appveyor)](https://github.com/Inadequado4192/awse/blob/master/LICENSE) [![Language](https://img.shields.io/badge/Language-JS%2FTS-yellowgreen?style=for-the-badge&logo=appveyor)](https://www.npmjs.com/package/awse)
+[![npm Package](https://img.shields.io/badge/npm-v1.1.3-blue?style=for-the-badge&logo=appveyor)](https://www.npmjs.org/package/awse) [![License](https://img.shields.io/badge/license-ISC-green?style=for-the-badge&logo=appveyor)](https://github.com/Inadequado4192/awse/blob/master/LICENSE) [![Language](https://img.shields.io/badge/Language-JS%2FTS-yellowgreen?style=for-the-badge&logo=appveyor)](https://www.npmjs.com/package/awse)
 
 # Installation
 
@@ -34,7 +34,7 @@ getAnySite({
     search: "Black Clover",
     pages: 2,
     minImages: 100
-}).then(d => console.log(d.url, d.url, d.pages, d.timeout));
+}).then(d => console.log(d.url, d.images, d.pages, d.timeout));
 ```
 
 # Parameters of the `get(options)` function
