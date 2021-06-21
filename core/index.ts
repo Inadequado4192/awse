@@ -13,11 +13,12 @@ function getBody(url: string) {
 /**Contains data received from the site.*/
 class Data {
     /**Link to website.*/         public url: string;
+    /**An array of links from which the images were searched for.*/ public sources: Set<string>;
     /**List of image URLs.*/      public images: Set<string>;
     /**Function execution time.*/ public timeout: number;
     /**Number of pages viewed.*/  public pages: number;
-    constructor(url: string, images: Set<string>, timeout: number, pages: number) {
-        this.url = url; this.images = images; this.timeout = timeout; this.pages = pages;
+    constructor(url: string, images: Set<string>, timeout: number, pages: number, sources: Set<string>) {
+        this.url = url; this.images = images; this.timeout = timeout; this.pages = pages; this.sources = sources;
     };
     /**Selects random images from the list.
      * @returns URL
@@ -47,6 +48,7 @@ type OptionsGet = {
 type ParamGet = {
     end: (page: number) => void,
     images: Set<string>,
+    sources: Set<string>,
     sTime: number,
     search: string,
     pages: number,
@@ -89,12 +91,14 @@ abstract class Web {
         let sTime = new Date().getTime();
         let images = new Set<string>();
         let url = this.url;
+        let sources = new Set<string>();
         return new Promise(async (resolve: (value: Data) => void) => {
-            function end(page: number) { resolve(new Data(url, images, new Date().getTime() - sTime, page - 1)); }
+            function end(page: number) { resolve(new Data(url, images, new Date().getTime() - sTime, page - 1, sources)); }
             this._get({
                 end: end,
                 images: images,
                 minImages: options.minImages,
+                sources: sources,
                 pages: options.pages,
                 sTime: sTime,
                 search: options.search
@@ -118,7 +122,9 @@ class StaticWeb extends Web {
         let _IU: string;
         (async function loadPage(this: StaticWeb, page: number): Promise<void> {
             if (page > param.pages && param.images.size >= param.minImages) return param.end(page);
-            let $ = cheerio.load(await getBody(this._searchURL(param.search.replace(/\s+/g, "%20"), page)));
+            let url = this._searchURL(param.search.replace(/\s+/g, "%20"), page);
+            param.sources.add(url);
+            let $ = cheerio.load(await getBody(url));
             // write($);
             // console.log(this._searchURL(options.search.replace(/\s+/g, "%20"), page));
 
@@ -238,12 +244,12 @@ const goodfon = new StaticWeb({
  * 
  * He will find art for almost any request :)
  */
-const zedge = new LiveWeb({
-    url: "https://www.zedge.net/",
-    _searchURL(tag, page) {
-        return `https://www.zedge.net/api-zedge-web/browse/search?query=Anime%20${tag}&cursor=1%3AzyV1ag%3A${48 * (page - 1)}&section=search-wallpapers-Anime-${tag}&contentType=wallpapers`
-    }
-});
+// const zedge = new LiveWeb({
+//     url: "https://www.zedge.net/",
+//     _searchURL(tag, page) {
+//         return `https://www.zedge.net/api-zedge-web/browse/search?query=Anime%20${tag}&cursor=1%3AzyV1ag%3A${48 * (page - 1)}&section=search-wallpapers-Anime-${tag}&contentType=wallpapers`
+//     }
+// });
 
 /**Function for working with images from any of the available sites.
  * @example
@@ -255,8 +261,8 @@ const zedge = new LiveWeb({
  * }).then(console.log);
  */
 function getAnySite(param: OptionsGet): Promise<Data> {
-    let list = ["alphacoders", "wallpaperflare", "pikabu", "goodfon", "zedge"];
+    let list = ["alphacoders", "wallpaperflare", "pikabu", "goodfon"];
     return (eval(list[Math.floor(Math.random() * list.length)]) as Web).get(param);
 }
 
-export { getAnySite, alphacoders, wallpaperflare, pikabu, goodfon, zedge };
+export { getAnySite, alphacoders, wallpaperflare, pikabu, goodfon };

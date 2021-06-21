@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.zedge = exports.goodfon = exports.pikabu = exports.wallpaperflare = exports.alphacoders = exports.getAnySite = void 0;
+exports.goodfon = exports.pikabu = exports.wallpaperflare = exports.alphacoders = exports.getAnySite = void 0;
 const then_request_1 = require("then-request");
 const cheerio = require("cheerio");
 function getBody(url) {
@@ -11,11 +11,12 @@ function getBody(url) {
     });
 }
 class Data {
-    constructor(url, images, timeout, pages) {
+    constructor(url, images, timeout, pages, sources) {
         this.url = url;
         this.images = images;
         this.timeout = timeout;
         this.pages = pages;
+        this.sources = sources;
     }
     ;
     randomRange(range = 1) {
@@ -49,12 +50,14 @@ class Web {
         let sTime = new Date().getTime();
         let images = new Set();
         let url = this.url;
+        let sources = new Set();
         return new Promise(async (resolve) => {
-            function end(page) { resolve(new Data(url, images, new Date().getTime() - sTime, page - 1)); }
+            function end(page) { resolve(new Data(url, images, new Date().getTime() - sTime, page - 1, sources)); }
             this._get({
                 end: end,
                 images: images,
                 minImages: options.minImages,
+                sources: sources,
                 pages: options.pages,
                 sTime: sTime,
                 search: options.search
@@ -73,7 +76,9 @@ class StaticWeb extends Web {
         (async function loadPage(page) {
             if (page > param.pages && param.images.size >= param.minImages)
                 return param.end(page);
-            let $ = cheerio.load(await getBody(this._searchURL(param.search.replace(/\s+/g, "%20"), page)));
+            let url = this._searchURL(param.search.replace(/\s+/g, "%20"), page);
+            param.sources.add(url);
+            let $ = cheerio.load(await getBody(url));
             let images = Array.from($(this._imagePath));
             if (images.length < 1)
                 return param.end(page);
@@ -158,15 +163,8 @@ const goodfon = new StaticWeb({
     }
 });
 exports.goodfon = goodfon;
-const zedge = new LiveWeb({
-    url: "https://www.zedge.net/",
-    _searchURL(tag, page) {
-        return `https://www.zedge.net/api-zedge-web/browse/search?query=Anime%20${tag}&cursor=1%3AzyV1ag%3A${48 * (page - 1)}&section=search-wallpapers-Anime-${tag}&contentType=wallpapers`;
-    }
-});
-exports.zedge = zedge;
 function getAnySite(param) {
-    let list = ["alphacoders", "wallpaperflare", "pikabu", "goodfon", "zedge"];
+    let list = ["alphacoders", "wallpaperflare", "pikabu", "goodfon"];
     return eval(list[Math.floor(Math.random() * list.length)]).get(param);
 }
 exports.getAnySite = getAnySite;

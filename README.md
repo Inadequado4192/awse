@@ -1,10 +1,10 @@
 # What is this?
 
 Getting anime wallpapers from websites.
-> List of available websites: `alphacoders`, `wallpaperflare`, `pikabu`, `goodfon`, `zedge`
+> List of available websites: `alphacoders`, `wallpaperflare`, `pikabu`, `goodfon`
 
 
-[![npm Package](https://img.shields.io/badge/npm-v1.1.3-blue?style=for-the-badge&logo=appveyor)](https://www.npmjs.org/package/awse) [![License](https://img.shields.io/badge/license-ISC-green?style=for-the-badge&logo=appveyor)](https://github.com/Inadequado4192/awse/blob/master/LICENSE) [![Language](https://img.shields.io/badge/Language-JS%2FTS-yellowgreen?style=for-the-badge&logo=appveyor)](https://www.npmjs.com/package/awse)
+[![npm Package](https://img.shields.io/badge/npm-v1.2.0-blue?style=for-the-badge&logo=appveyor)](https://www.npmjs.org/package/awse) [![License](https://img.shields.io/badge/license-ISC-green?style=for-the-badge&logo=appveyor)](https://github.com/Inadequado4192/awse/blob/master/LICENSE) [![Language](https://img.shields.io/badge/Language-JS%2FTS-yellowgreen?style=for-the-badge&logo=appveyor)](https://www.npmjs.com/package/awse)
 
 # Installation
 
@@ -14,7 +14,7 @@ Getting anime wallpapers from websites.
 
 To get started, export the site you need or several at once.
 ```js
-const { alphacoders, wallpaperflare, pikabu, goodfon, zedge } = require("awse");
+const { alphacoders, wallpaperflare, pikabu, goodfon } = require("awse");
 ```
 Or use the `getAnySite` function. It performs a `get` function on a random site instance.
 ```js
@@ -50,6 +50,7 @@ The result of execution will be `Promise <Data>`.
 `Data` - Contains data received from the site:
 * ### Properties:
   * **url** `:string` - Link to website.
+  * **sources** `:Set<string>` - An array of links from which the images were searched for.
   * **images** `:Set<string>` - List of image images.
   * **timeout** `:number` - Function execution time.
   * **pages** `:number` - Number of pages viewed.

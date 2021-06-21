@@ -1,9 +1,9 @@
-const { getAnySite, alphacoders, wallpaperflare, pikabu, goodfon, zedge } = require("../core");
+const { getAnySite, alphacoders, wallpaperflare, pikabu, goodfon } = require("../core");
 
-["alphacoders", "wallpaperflare", "pikabu", "goodfon", "zedge"].forEach(fn => {
+["alphacoders", "wallpaperflare", "pikabu", "goodfon"].forEach(fn => {
     eval(fn).get({
-        search: "Neko",
+        search: "",
         pages: 10,
         minImages: 100
-    }).then(d => console.log(fn, d.URLs.size, d.pages))
+    }).then(d => console.log(fn, d.images.size, d.pages))
 });
