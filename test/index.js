@@ -4,6 +4,6 @@ const { getAnySite, alphacoders, wallpaperflare, pikabu, goodfon } = require("..
     eval(fn).get({
         search: "",
         pages: 10,
-        minImages: 100
+        minImages: 10
     }).then(d => console.log(fn, d.images.size, d.pages))
 });

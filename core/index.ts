@@ -121,6 +121,8 @@ class StaticWeb extends Web {
     protected async _get(param: ParamGet) {
         let _IU: string;
         (async function loadPage(this: StaticWeb, page: number): Promise<void> {
+            const _continue = () => loadPage.apply(this, [++page]);
+            // console.log(page > param.pages && param.images.size >= param.minImages);
             if (page > param.pages && param.images.size >= param.minImages) return param.end(page);
             let url = this._searchURL(param.search.replace(/\s+/g, "%20"), page);
             param.sources.add(url);
@@ -141,7 +143,8 @@ class StaticWeb extends Web {
                 _IU = fSRC;
             }
 
-            loadPage.apply(this, [++page]);
+            _continue();
+            // loadPage.apply(this, [++page]);
         }).apply(this, [1]);
     }
 }
@@ -173,11 +176,13 @@ const alphacoders = new StaticWeb({
     url: "https://wall.alphacoders.com/",
     _imagePath: ".thumb-container-big > div.thumb-container > div.boxgrid > a > picture > img",
     _searchURL(tag: string, page: number): string {
-        return `${this.url}search.php?search=anime%20${tag || "art"}&quickload=0&page=${page}`;
+        // `${this.url}by_sub_category.php?id=173173&name=Naruto+Wallpapers`;
+        // `${this.url}by_sub_category.php?id=333944&name=Genshin+Impact+Wallpapers`;
+        return `${this.url}search.php?search=${tag || "art"}&page=${page}`;
     },
-    _imageСheck(img) {
-        return (<any>img).parentNode.parentNode.parentNode.next.next.children[1].children[3].children[0].data == "Anime";
-    }
+    // _imageСheck(img) {
+    //     return (<any>img).parentNode.parentNode.parentNode.next.next.children[1].children[3].children[0].data == "Anime";
+    // }
 });
 
 /**
