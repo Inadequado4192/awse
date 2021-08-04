@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.goodfon = exports.pikabu = exports.wallpaperflare = exports.alphacoders = exports.getAnySite = void 0;
+exports.goodfon = exports.pikabu = exports.wallpaperflare = exports.Alphacoders = exports.getAnySite = void 0;
 const then_request_1 = require("then-request");
 const cheerio = require("cheerio");
 function getBody(url) {
@@ -60,7 +60,8 @@ class Web {
                 sources: sources,
                 pages: options.pages,
                 sTime: sTime,
-                search: options.search
+                search: options.search,
+                type: options.type
             });
         });
     }
@@ -77,7 +78,7 @@ class StaticWeb extends Web {
             const _continue = () => loadPage.apply(this, [++page]);
             if (page > param.pages && param.images.size >= param.minImages)
                 return param.end(page);
-            let url = this._searchURL(param.search.replace(/\s+/g, "%20"), page);
+            let url = this._searchURL(param.search.replace(/\s+/g, "%20"), page, param.type);
             param.sources.add(url);
             let $ = cheerio.load(await getBody(url));
             let images = Array.from($(this._imagePath));
@@ -98,34 +99,7 @@ class StaticWeb extends Web {
         }).apply(this, [1]);
     }
 }
-class LiveWeb extends Web {
-    constructor(options) {
-        super(options);
-    }
-    async _get(param) {
-        (async function loadPage(page) {
-            const $ = cheerio.load(await getBody(this._searchURL(param.search.replace(/\s+/g, "%20"), page)));
-            let jItems = JSON.parse($("body").html()).items;
-            for (let i of jItems) {
-                if (!i.tags.includes("anime"))
-                    continue;
-                param.images.add(i.thumbUrl);
-            }
-            if ((page < param.pages) && jItems.length > 0)
-                return await loadPage.apply(this, [++page]);
-            else
-                param.end(page + 1);
-        }).apply(this, [1]);
-    }
-}
-const alphacoders = new StaticWeb({
-    url: "https://wall.alphacoders.com/",
-    _imagePath: ".thumb-container-big > div.thumb-container > div.boxgrid > a > picture > img",
-    _searchURL(tag, page) {
-        return `${this.url}search.php?search=${tag || "art"}&page=${page}`;
-    },
-});
-exports.alphacoders = alphacoders;
+const write = ($) => require("fs-extra").writeFile("./test/test.html", $.html());
 const wallpaperflare = new StaticWeb({
     url: "https://www.wallpaperflare.com/",
     _imagePath: "#gallery > li > figure > a > img",
@@ -162,8 +136,78 @@ const goodfon = new StaticWeb({
 });
 exports.goodfon = goodfon;
 function getAnySite(param) {
-    let list = ["alphacoders", "wallpaperflare", "pikabu", "goodfon"];
+    let list = ["Alphacoders", "wallpaperflare", "pikabu", "goodfon"];
     return eval(list[Math.floor(Math.random() * list.length)]).get(param);
 }
 exports.getAnySite = getAnySite;
+function checkOptions(o) {
+    if (!o)
+        throw TypeError(`The "options" parameter is not specified.`);
+    if ((!o.search && o.search !== "") || typeof o.search !== "string")
+        throw TypeError(`Missing "search" argument in parameters`);
+    if (!o.pages || o.pages < 0)
+        o.pages = 1;
+    if (!o.minImages || o.minImages < 0)
+        o.minImages = 0;
+    if (!o.type)
+        o.type = "Mobile";
+    return o;
+}
+async function getContent(url) {
+    return cheerio.load(await getBody(url));
+}
+function getImages($, path) {
+    return Array.from($(path)).map(i => i.attribs.src || i.attribs["data-src"]);
+}
+var Alphacoders;
+(function (Alphacoders) {
+    Alphacoders.url = "https://wall.alphacoders.com/";
+    function get(o) {
+        const options = checkOptions(o);
+        return new Promise((resolve, reject) => {
+            let sTime = new Date().getTime();
+            let images = new Set();
+            let sources = new Set();
+            let _end = false;
+            function end(page) { _end = true; resolve(new Data(Alphacoders.url, images, new Date().getTime() - sTime, page - 1, sources)); }
+            (async function loadPage(page) {
+                if ((page > options.pages && images.size >= options.minImages) || _end)
+                    return end(page);
+                `https://wall.alphacoders.com/search.php?search=${options.search.replace(/\s+/g, "%20")}&page=${page}`;
+                let url = `https://wall.alphacoders.com/search.php?search=${options.search.replace(/\s+/g, "%20")}`;
+                let $ = await getContent(url);
+                const id_request = $(`meta[property="og:url"]`).attr("content")?.match(/id=(\d+)/)?.[1];
+                if (id_request === undefined)
+                    o.type = "PC";
+                let _images;
+                let path;
+                switch (o.type) {
+                    case "PC":
+                        url = `https://wall.alphacoders.com/by_sub_category.php?id=${id_request}&page=${page}`;
+                        path = ".thumb-container-big > div.thumb-container > div.boxgrid > a > picture > img";
+                        break;
+                    case "Mobile":
+                        url = `https://mobile.alphacoders.com/by-sub-category/${id_request}?page${page}`;
+                        path = ".item a img";
+                        break;
+                    default: throw Error(`Unknown type "${o.type}"`);
+                }
+                $ = await getContent(url);
+                _images = getImages($, path);
+                if (_images.length < 1)
+                    return end(page);
+                _images.forEach(url => { if (images.has(url)) {
+                    console.log("forEach");
+                    end(page);
+                } ; });
+                for (let url of _images)
+                    images.add(url);
+                sources.add(url);
+                loadPage(++page);
+            })(1);
+        });
+    }
+    Alphacoders.get = get;
+})(Alphacoders || (Alphacoders = {}));
+exports.Alphacoders = Alphacoders;
 //# sourceMappingURL=index.js.map
