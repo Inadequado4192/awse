@@ -1,6 +1,6 @@
 const { getAnySite, Alphacoders, wallpaperflare, pikabu, goodfon } = require("../core");
 
-// ["alphacoders", "wallpaperflare", "pikabu", "goodfon"].forEach(fn => {
+// ["Alphacoders", "wallpaperflare", "pikabu", "goodfon"].forEach(fn => {
 //     eval(fn).get({
 //         search: "",
 //         pages: 10,
@@ -9,14 +9,7 @@ const { getAnySite, Alphacoders, wallpaperflare, pikabu, goodfon } = require("..
 // });
 
 
-// alphacoders.get({
-//     search: "Genshin Impact",
-//     type: "PC"
-// }).then(console.log);
-
 Alphacoders.get({
-    search: "Naruto",
-    type: "Mobile",
-    pages: 2,
-    by: "by collection"
+    search: "Genshin Impact",
+    type: "PC"
 }).then(console.log);

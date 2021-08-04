@@ -337,7 +337,6 @@ namespace Alphacoders {
             let _end = false;
             function end(page: number) { _end = true; resolve(new Data(url, images, new Date().getTime() - sTime, page - 1, sources)); }
 
-            // let _IU: string;
             (async function loadPage(page: number) {
                 if ((page > options.pages && images.size >= options.minImages) || _end) return end(page);
 
@@ -349,17 +348,19 @@ namespace Alphacoders {
                 let _images: string[];
                 let path: string;
 
-                switch (options.type as NonNullable<Types[number]>) {
-                    case "PC":
-                        url = `https://wall.alphacoders.com/${options.by?.replace(/\s/g, "_")}.php?id=${id_request}&page=${page}`;
-                        path = ".thumb-container-big > div.thumb-container > div.boxgrid > a > picture > img";
-                        break;
-                    case "Mobile":
-                        url = `https://mobile.alphacoders.com/${options.by?.replace(/\s/g, "-")}/${id_request}?page=${page}`;
-                        path = ".item a img";
-                        break;
-                    default: throw Error(`Unknown type "${options.type}"`);
-                }
+                if (id_request) {
+                    switch (options.type as NonNullable<Types[number]>) {
+                        case "PC":
+                            url = `https://wall.alphacoders.com/${options.by?.replace(/\s/g, "_")}.php?id=${id_request}&page=${page}`;
+                            path = ".thumb-container-big > div.thumb-container > div.boxgrid > a > picture > img";
+                            break;
+                        case "Mobile":
+                            url = `https://mobile.alphacoders.com/${options.by?.replace(/\s/g, "-")}/${id_request}?page=${page}`;
+                            path = ".item a img";
+                            break;
+                        default: throw Error(`Unknown type "${options.type}"`);
+                    }
+                } else path = ".thumb-container-big > div.thumb-container > div.boxgrid > a > picture > img";
 
                 $ = await getContent(url);
                 // if ((<any>$("head title"))[0].children[0].data == "404 Not Found") {

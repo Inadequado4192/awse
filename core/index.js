@@ -183,17 +183,21 @@ var Alphacoders;
                     options.type = "PC";
                 let _images;
                 let path;
-                switch (options.type) {
-                    case "PC":
-                        url = `https://wall.alphacoders.com/${options.by?.replace(/\s/g, "_")}.php?id=${id_request}&page=${page}`;
-                        path = ".thumb-container-big > div.thumb-container > div.boxgrid > a > picture > img";
-                        break;
-                    case "Mobile":
-                        url = `https://mobile.alphacoders.com/${options.by?.replace(/\s/g, "-")}/${id_request}?page=${page}`;
-                        path = ".item a img";
-                        break;
-                    default: throw Error(`Unknown type "${options.type}"`);
+                if (id_request) {
+                    switch (options.type) {
+                        case "PC":
+                            url = `https://wall.alphacoders.com/${options.by?.replace(/\s/g, "_")}.php?id=${id_request}&page=${page}`;
+                            path = ".thumb-container-big > div.thumb-container > div.boxgrid > a > picture > img";
+                            break;
+                        case "Mobile":
+                            url = `https://mobile.alphacoders.com/${options.by?.replace(/\s/g, "-")}/${id_request}?page=${page}`;
+                            path = ".item a img";
+                            break;
+                        default: throw Error(`Unknown type "${options.type}"`);
+                    }
                 }
+                else
+                    path = ".thumb-container-big > div.thumb-container > div.boxgrid > a > picture > img";
                 $ = await getContent(url);
                 _images = getImages($, path);
                 if (_images.length < 1)
