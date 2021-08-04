@@ -1,6 +1,6 @@
 {
     "name": "awse",
-    "version": "1.4.2",
+    "version": "1.4.3",
     "description": "Getting anime wallpapers from websites.",
     "main": "core/index.js",
     "scripts": {
