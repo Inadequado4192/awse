@@ -279,11 +279,9 @@ function getAnySite(param: OptionsGet): Promise<Data> {
 
 function checkOptions(o: AlphacodersOptionsGet): Required<AlphacodersOptionsGet> {
     if (!o) throw TypeError(`The "options" parameter is not specified.`);
-    if ((!o.search && o.search !== "") || typeof o.search !== "string") throw TypeError(`Missing "search" argument in parameters`);
     if (!o.pages || o.pages < 0) o.pages = 1;
     if (!o.minImages || o.minImages < 0) o.minImages = 0;
-    if (!o.type) o.type = "Mobile";
-    if (!o.by) o.by = "by sub category";
+    if (!o.type) o.type = "PC";
     return o as Required<AlphacodersOptionsGet>;
 }
 
@@ -299,11 +297,12 @@ function getImages($: cheerio.CheerioAPI, path: string) {
  * Up to 30 posts per page
  */
 
-type AlphacodersOptionsGet = OptionsGet & {
-    /**If the result did not return values, try changing this parameter. Default: by sub category */ by?: BY
+type AlphacodersOptionsGet = Partial<OptionsGet> & {
+    /**If the result did not return values, try changing this parameter. */ by?: BY,
+    /*Request ID*/ id?: number
 }
 
-const const_by = ["by sub category", "by collection"] as const;
+const const_by = ["by sub category", "by collection", "by category"] as const;
 type BY = typeof const_by[number];
 namespace Alphacoders {
     export const url = "https://wall.alphacoders.com/";
@@ -337,13 +336,18 @@ namespace Alphacoders {
             let _end = false;
             function end(page: number) { _end = true; resolve(new Data(url, images, new Date().getTime() - sTime, page - 1, sources)); }
 
-            (async function loadPage(page: number) {
+            (async function loadPage(page: number, by: number) {
                 if ((page > options.pages && images.size >= options.minImages) || _end) return end(page);
 
-                let url: string = `https://wall.alphacoders.com/search.php?search=${options.search.replace(/\s+/g, "%20")}`;
-                let $ = await getContent(url);
-                const id_request: string | undefined = $(`meta[property="og:url"]`).attr("content")?.match(/id=(\d+)/)?.[1];
+                let url: string | null = null, $: cheerio.CheerioAPI | null = null, id_request: string | undefined;
+                if (options.search) {
+                    url = `https://wall.alphacoders.com/search.php?search=${options.search.replace(/\s+/g, "%20")}`;
+                    $ = await getContent(url);
+                }
+                if (options.id !== undefined) id_request = String(options.id);
+                else if ($) id_request = $(`meta[property="og:url"]`).attr("content")?.match(/id=(\d+)/)?.[1];
                 if (id_request === undefined) options.type = "PC";
+
                 // if (id_request === undefined) throw Error("Request id could not be found");
                 let _images: string[];
                 let path: string;
@@ -351,34 +355,38 @@ namespace Alphacoders {
                 if (id_request) {
                     switch (options.type as NonNullable<Types[number]>) {
                         case "PC":
-                            url = `https://wall.alphacoders.com/${options.by?.replace(/\s/g, "_")}.php?id=${id_request}&page=${page}`;
+                            url = `https://wall.alphacoders.com/${(options.by ?? (<any>const_by)[by])?.replace(/\s/g, "_")}.php?id=${id_request}&page=${page}`;
                             path = ".thumb-container-big > div.thumb-container > div.boxgrid > a > picture > img";
                             break;
                         case "Mobile":
-                            url = `https://mobile.alphacoders.com/${options.by?.replace(/\s/g, "-")}/${id_request}?page=${page}`;
+                            url = `https://mobile.alphacoders.com/${(options.by ?? (<any>const_by)[by])?.replace(/\s/g, "-")}/${id_request}?page=${page}`;
                             path = ".item a img";
                             break;
                         default: throw Error(`Unknown type "${options.type}"`);
                     }
                 } else path = ".thumb-container-big > div.thumb-container > div.boxgrid > a > picture > img";
 
+                if (!url) return end(page);
                 $ = await getContent(url);
-                // if ((<any>$("head title"))[0].children[0].data == "404 Not Found") {
-                //     let new_by = const_by[by];
-                //     if (!new_by) throw Error(`The reference "${url}" cannot be searched for`);
-                //     loadPage(page, ++by);
-                //     return;
-                // }
+                if ((<any>$("head title"))[0].children[0].data == "404 Not Found") {
+                    let new_by = const_by[by];
+                    if (!new_by) throw Error(`The reference "${url}" cannot be searched for`);
+                    loadPage(page, ++by);
+                    return;
+                }
+
+                // https://wall.alphacoders.com/by_category.php?id=3&page=2
 
                 _images = getImages($, path);
 
                 if (_images.length < 1) return end(page);
-                _images.forEach(url => { if (images.has(url)) { console.log("forEach"); end(page) }; });
+                _images.forEach(url => { if (images.has(url)) { end(page) }; });
                 for (let url of _images) images.add(url);
                 sources.add(url);
-
-                loadPage(++page);
-            })(1);
+                // https://wall.alphacoders.com/by_sub_category.php?id=292660
+                // https://wall.alphacoders.com/by_sub_category.php?id=Pony&page=1
+                loadPage(++page, by);
+            })(1, 0);
         })
     }
 }

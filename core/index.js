@@ -143,16 +143,12 @@ exports.getAnySite = getAnySite;
 function checkOptions(o) {
     if (!o)
         throw TypeError(`The "options" parameter is not specified.`);
-    if ((!o.search && o.search !== "") || typeof o.search !== "string")
-        throw TypeError(`Missing "search" argument in parameters`);
     if (!o.pages || o.pages < 0)
         o.pages = 1;
     if (!o.minImages || o.minImages < 0)
         o.minImages = 0;
     if (!o.type)
-        o.type = "Mobile";
-    if (!o.by)
-        o.by = "by sub category";
+        o.type = "PC";
     return o;
 }
 async function getContent(url) {
@@ -161,7 +157,7 @@ async function getContent(url) {
 function getImages($, path) {
     return Array.from($(path)).map(i => i.attribs.src || i.attribs["data-src"]);
 }
-const const_by = ["by sub category", "by collection"];
+const const_by = ["by sub category", "by collection", "by category"];
 var Alphacoders;
 (function (Alphacoders) {
     Alphacoders.url = "https://wall.alphacoders.com/";
@@ -173,12 +169,18 @@ var Alphacoders;
             let sources = new Set();
             let _end = false;
             function end(page) { _end = true; resolve(new Data(Alphacoders.url, images, new Date().getTime() - sTime, page - 1, sources)); }
-            (async function loadPage(page) {
+            (async function loadPage(page, by) {
                 if ((page > options.pages && images.size >= options.minImages) || _end)
                     return end(page);
-                let url = `https://wall.alphacoders.com/search.php?search=${options.search.replace(/\s+/g, "%20")}`;
-                let $ = await getContent(url);
-                const id_request = $(`meta[property="og:url"]`).attr("content")?.match(/id=(\d+)/)?.[1];
+                let url = null, $ = null, id_request;
+                if (options.search) {
+                    url = `https://wall.alphacoders.com/search.php?search=${options.search.replace(/\s+/g, "%20")}`;
+                    $ = await getContent(url);
+                }
+                if (options.id !== undefined)
+                    id_request = String(options.id);
+                else if ($)
+                    id_request = $(`meta[property="og:url"]`).attr("content")?.match(/id=(\d+)/)?.[1];
                 if (id_request === undefined)
                     options.type = "PC";
                 let _images;
@@ -186,11 +188,11 @@ var Alphacoders;
                 if (id_request) {
                     switch (options.type) {
                         case "PC":
-                            url = `https://wall.alphacoders.com/${options.by?.replace(/\s/g, "_")}.php?id=${id_request}&page=${page}`;
+                            url = `https://wall.alphacoders.com/${(options.by ?? const_by[by])?.replace(/\s/g, "_")}.php?id=${id_request}&page=${page}`;
                             path = ".thumb-container-big > div.thumb-container > div.boxgrid > a > picture > img";
                             break;
                         case "Mobile":
-                            url = `https://mobile.alphacoders.com/${options.by?.replace(/\s/g, "-")}/${id_request}?page=${page}`;
+                            url = `https://mobile.alphacoders.com/${(options.by ?? const_by[by])?.replace(/\s/g, "-")}/${id_request}?page=${page}`;
                             path = ".item a img";
                             break;
                         default: throw Error(`Unknown type "${options.type}"`);
@@ -198,19 +200,27 @@ var Alphacoders;
                 }
                 else
                     path = ".thumb-container-big > div.thumb-container > div.boxgrid > a > picture > img";
+                if (!url)
+                    return end(page);
                 $ = await getContent(url);
+                if ($("head title")[0].children[0].data == "404 Not Found") {
+                    let new_by = const_by[by];
+                    if (!new_by)
+                        throw Error(`The reference "${url}" cannot be searched for`);
+                    loadPage(page, ++by);
+                    return;
+                }
                 _images = getImages($, path);
                 if (_images.length < 1)
                     return end(page);
                 _images.forEach(url => { if (images.has(url)) {
-                    console.log("forEach");
                     end(page);
                 } ; });
                 for (let url of _images)
                     images.add(url);
                 sources.add(url);
-                loadPage(++page);
-            })(1);
+                loadPage(++page, by);
+            })(1, 0);
         });
     }
     Alphacoders.get = get;
