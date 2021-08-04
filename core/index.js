@@ -151,6 +151,8 @@ function checkOptions(o) {
         o.minImages = 0;
     if (!o.type)
         o.type = "Mobile";
+    if (!o.by)
+        o.by = "by sub category";
     return o;
 }
 async function getContent(url) {
@@ -159,11 +161,12 @@ async function getContent(url) {
 function getImages($, path) {
     return Array.from($(path)).map(i => i.attribs.src || i.attribs["data-src"]);
 }
+const const_by = ["by sub category", "by collection"];
 var Alphacoders;
 (function (Alphacoders) {
     Alphacoders.url = "https://wall.alphacoders.com/";
-    function get(o) {
-        const options = checkOptions(o);
+    function get(_o) {
+        const options = checkOptions(_o);
         return new Promise((resolve, reject) => {
             let sTime = new Date().getTime();
             let images = new Set();
@@ -173,24 +176,23 @@ var Alphacoders;
             (async function loadPage(page) {
                 if ((page > options.pages && images.size >= options.minImages) || _end)
                     return end(page);
-                `https://wall.alphacoders.com/search.php?search=${options.search.replace(/\s+/g, "%20")}&page=${page}`;
                 let url = `https://wall.alphacoders.com/search.php?search=${options.search.replace(/\s+/g, "%20")}`;
                 let $ = await getContent(url);
                 const id_request = $(`meta[property="og:url"]`).attr("content")?.match(/id=(\d+)/)?.[1];
                 if (id_request === undefined)
-                    o.type = "PC";
+                    options.type = "PC";
                 let _images;
                 let path;
-                switch (o.type) {
+                switch (options.type) {
                     case "PC":
-                        url = `https://wall.alphacoders.com/by_sub_category.php?id=${id_request}&page=${page}`;
+                        url = `https://wall.alphacoders.com/${options.by?.replace(/\s/g, "_")}.php?id=${id_request}&page=${page}`;
                         path = ".thumb-container-big > div.thumb-container > div.boxgrid > a > picture > img";
                         break;
                     case "Mobile":
-                        url = `https://mobile.alphacoders.com/by-sub-category/${id_request}?page${page}`;
+                        url = `https://mobile.alphacoders.com/${options.by?.replace(/\s/g, "-")}/${id_request}?page=${page}`;
                         path = ".item a img";
                         break;
-                    default: throw Error(`Unknown type "${o.type}"`);
+                    default: throw Error(`Unknown type "${options.type}"`);
                 }
                 $ = await getContent(url);
                 _images = getImages($, path);

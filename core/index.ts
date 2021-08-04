@@ -277,13 +277,14 @@ function getAnySite(param: OptionsGet): Promise<Data> {
     return (eval(list[Math.floor(Math.random() * list.length)]) as Web).get(param);
 }
 
-function checkOptions(o: OptionsGet): Required<OptionsGet> {
+function checkOptions(o: AlphacodersOptionsGet): Required<AlphacodersOptionsGet> {
     if (!o) throw TypeError(`The "options" parameter is not specified.`);
     if ((!o.search && o.search !== "") || typeof o.search !== "string") throw TypeError(`Missing "search" argument in parameters`);
     if (!o.pages || o.pages < 0) o.pages = 1;
     if (!o.minImages || o.minImages < 0) o.minImages = 0;
     if (!o.type) o.type = "Mobile";
-    return o as Required<OptionsGet>;
+    if (!o.by) o.by = "by sub category";
+    return o as Required<AlphacodersOptionsGet>;
 }
 
 async function getContent(url: string) {
@@ -297,6 +298,13 @@ function getImages($: cheerio.CheerioAPI, path: string) {
  * An instance of the class for working with images from the site https://wall.alphacoders.com/
  * Up to 30 posts per page
  */
+
+type AlphacodersOptionsGet = OptionsGet & {
+    /**If the result did not return values, try changing this parameter. Default: by sub category */ by?: BY
+}
+
+const const_by = ["by sub category", "by collection"] as const;
+type BY = typeof const_by[number];
 namespace Alphacoders {
     export const url = "https://wall.alphacoders.com/";
     /**
@@ -318,8 +326,8 @@ namespace Alphacoders {
             minImages: 40
         }).then(console.log);
     */
-    export function get(o: OptionsGet): Promise<Data> {
-        const options = checkOptions(o);
+    export function get(_o: AlphacodersOptionsGet): Promise<Data> {
+        const options = checkOptions(_o);
 
         return new Promise<Data>((resolve, reject) => {
             let sTime = new Date().getTime();
@@ -333,28 +341,34 @@ namespace Alphacoders {
             (async function loadPage(page: number) {
                 if ((page > options.pages && images.size >= options.minImages) || _end) return end(page);
 
-                // https://wall.alphacoders.com/search.php?search=genshin%20impact&page=1
-                `https://wall.alphacoders.com/search.php?search=${options.search.replace(/\s+/g, "%20")}&page=${page}`;
-
                 let url: string = `https://wall.alphacoders.com/search.php?search=${options.search.replace(/\s+/g, "%20")}`;
                 let $ = await getContent(url);
                 const id_request: string | undefined = $(`meta[property="og:url"]`).attr("content")?.match(/id=(\d+)/)?.[1];
-                if (id_request === undefined) o.type = "PC";
+                if (id_request === undefined) options.type = "PC";
                 // if (id_request === undefined) throw Error("Request id could not be found");
                 let _images: string[];
                 let path: string;
-                switch (o.type as NonNullable<Types[number]>) {
+
+                switch (options.type as NonNullable<Types[number]>) {
                     case "PC":
-                        url = `https://wall.alphacoders.com/by_sub_category.php?id=${id_request}&page=${page}`;
+                        url = `https://wall.alphacoders.com/${options.by?.replace(/\s/g, "_")}.php?id=${id_request}&page=${page}`;
                         path = ".thumb-container-big > div.thumb-container > div.boxgrid > a > picture > img";
                         break;
                     case "Mobile":
-                        url = `https://mobile.alphacoders.com/by-sub-category/${id_request}?page${page}`;
+                        url = `https://mobile.alphacoders.com/${options.by?.replace(/\s/g, "-")}/${id_request}?page=${page}`;
                         path = ".item a img";
                         break;
-                    default: throw Error(`Unknown type "${o.type}"`);
+                    default: throw Error(`Unknown type "${options.type}"`);
                 }
+
                 $ = await getContent(url);
+                // if ((<any>$("head title"))[0].children[0].data == "404 Not Found") {
+                //     let new_by = const_by[by];
+                //     if (!new_by) throw Error(`The reference "${url}" cannot be searched for`);
+                //     loadPage(page, ++by);
+                //     return;
+                // }
+
                 _images = getImages($, path);
 
                 if (_images.length < 1) return end(page);
